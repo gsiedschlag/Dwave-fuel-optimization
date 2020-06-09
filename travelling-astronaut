@@ -1,0 +1,8 @@
+"The problem is to optimize the delta V needed to travel between x satellites in given orbits based on their orbit parameters ri & vi"
+
+import itertools
+import random
+
+import dimod
+import neal
+import networkx as nx
