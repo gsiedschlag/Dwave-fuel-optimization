@@ -12,11 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Things to do:
- - Please name this file `test_<demo_name>.py`
- - Fill in [yyyy] and [name of copyright owner] in the copyright (top line)
- - Add unit tests for your demo
- - Add a smoke test (i.e. does the demo actually run?)
- - Format code so that it conforms with PEP 8
-"""
+import os
+import subprocess
+import sys
+import unittest
+
+example_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+class TestSmoke(unittest.TestCase):
+    # test that the example runs without failing
+    def test_smoke(self):
+        file_path = os.path.join(example_dir, 'satellite.py')
+
+        value = subprocess.check_output([sys.executable, file_path])
+
+        for constellation in eval(value):
+            self.assertIsInstance(constellation, frozenset)
+
+    def test_satellite(self):
+        """Verify contents of the output"""
+
+        file_path = os.path.join(example_dir, 'satellite.py')
+        output = subprocess.check_output([sys.executable, file_path])
+        output = str(output).upper()
+        if os.getenv('DEBUG_OUTPUT'):
+            print("Example output \n" + output)
+
+        with self.subTest(msg="Verify if output contains '[frozenset({' \n"):
+            self.assertIn("[frozenset({".upper(), output)
+        with self.subTest(msg="Verify if error string contains in output \n"):
+            self.assertNotIn("ERROR", output)
+        with self.subTest(msg="Verify if warning string contains in output \n"):
+            self.assertNotIn("WARNING", output)
