@@ -9,6 +9,7 @@ from dwave.system import LeapHybridSampler
 import pandas as pd
 from parambulator import variable_deltas
 import networkx as nx
+import dwave_networkx as dnx
 
 
 Data_name = "Orbit_parameters.txt" #text file with all orbit parameters for satellites 
@@ -48,4 +49,4 @@ for i in range(len(deltas)):
 sampler = LeapHybridSampler()
 
 #Test routes on quantum chip
-bqm = traveling_salesperson(routes,sampler)
+bqm = dnx.traveling_salesperson(routes,sampler)
