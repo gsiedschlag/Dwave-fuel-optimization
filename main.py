@@ -48,4 +48,4 @@ for i in range(len(deltas)):
 sampler = LeapHybridSampler()
 
 #Test routes on quantum chip
-bqm = traveling_salesperson_bqm(routes,sampler)
+bqm = traveling_salesperson(routes,sampler)
