@@ -12,7 +12,7 @@ import networkx as nx
 import dwave_networkx as dnx
 
 
-Data_name = "Orbit_parameters.txt" #text file with all orbit parameters for satellites 
+Data_name = "Orbit_parameters2.txt" #text file with all orbit parameters for satellites 
 Mp = 300 #mass of propellant in kg
 Mo = 500 #Total mass of space craft in kg
 Isp = 300 # Specific impulse of engine in s
