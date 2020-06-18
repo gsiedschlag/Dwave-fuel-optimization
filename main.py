@@ -43,8 +43,8 @@ sampler = LeapHybridSampler()
 #Test routes on quantum chip
 bqm = dnx.traveling_salesperson(routes,sampler)
 
-#Verify path is valid (all locations visited once)
-if (set(route) == set(G)):
+#Verify path is valid (all locations visited once) and result is in the list of routes
+if (set(bqm) == set(routes)):
   print('Best route: ' +str(bqm))
 else:
   print('Valid path not found')
