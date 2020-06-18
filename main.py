@@ -27,15 +27,7 @@ params.columns = ['r0x','r0y','r0z','v0x','v0y','v0z']
 #Calculate delta V's, fuel requirements, and delta t's to move from one orbit to another
 deltas = variable_deltas(params['r0x'],params['r0y'],params['r0z'],\
                       params['v0x'],params['v0y'],params['v0z'],\
-                          Mp,Mo,Isp,optimize)
-
-#create maximum value of worst route for weighting each edge
-total_max = 0
-if optimize == 'm':
-    total_max = Mp
-else:
-    for i in range(len(deltas)-1):
-        total_max += max(deltas[i][i+1:len(deltas)])    
+                          Mp,Mo,Isp,optimize)   
     
 #Turn matrix of Deltas into nodes and edges for reading
 #Graph is undirected so traveling from u to v has same weight
@@ -43,10 +35,11 @@ else:
 routes = nx.Graph()
 for i in range(len(deltas)):
     for j in range(i+1,len(deltas)):
-        routes.add_weighted_edges_from({(i,j,(deltas[i][j])/total_max), (j,i,deltas[j][i]/total_max)})
+        routes.add_weighted_edges_from({(i,j,deltas[i][j]), (j,i,deltas[j][i])})
 
 #choose sampler
 sampler = LeapHybridSampler()
 
 #Test routes on quantum chip
 bqm = dnx.traveling_salesperson(routes,sampler)
+print('Best route: ' +str(bqm))
