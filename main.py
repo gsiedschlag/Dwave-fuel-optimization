@@ -40,7 +40,7 @@ for i in range(len(deltas)):
 #choose sampler
 sampler = LeapHybridSampler()
 
-lagrange_list = [.1 1 5 10 20 30 50 100]
+lagrange_list = [.1, 1, 5, 10, 20, 30, 50, 100]
 
 for i in lagrange_list:
   #Test routes on quantum chip
