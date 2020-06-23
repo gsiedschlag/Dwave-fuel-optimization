@@ -18,7 +18,7 @@ Mo = 500 #Total mass of space craft in kg
 Isp = 300 # Specific impulse of engine in s
 
 #variable to return in deltas
-optimize = 't'
+optimize = 'v'
 
 #pars input data
 params = pd.read_csv(Data_name, header=None)
@@ -40,11 +40,14 @@ for i in range(len(deltas)):
 #choose sampler
 sampler = LeapHybridSampler()
 
-#Test routes on quantum chip
-bqm = dnx.traveling_salesperson(routes,sampler)
+lagrange_list = [.1 1 5 10 20 30 50 100]
 
-#Verify path is valid (all locations visited once) and result is in the list of routes
-if (set(bqm) == set(routes)):
-  print('Best route: ' +str(bqm))
-else:
-  print('Valid path not found')
+for i in lagrange_list:
+  #Test routes on quantum chip
+  bqm = dnx.traveling_salesperson(routes,sampler,i)
+
+  #Verify path is valid (all locations visited once) and result is in the list of routes
+  if (set(bqm) == set(routes)):
+    print('Best route: ' +str(bqm))
+  else:
+    print('Valid path not found')
