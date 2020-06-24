@@ -10,6 +10,7 @@ import pandas as pd
 from parambulator import variable_deltas
 import networkx as nx
 import dwave_networkx as dnx
+import time
 
 
 Data_name = "Orbit_parameters2.txt" #text file with all orbit parameters for satellites 
@@ -43,9 +44,11 @@ sampler = LeapHybridSampler()
 lagrange_list = [.1, 1, 5, 10, 20, 30, 50, 100]
 
 for i in lagrange_list:
+  # time sampler based on lagrange parameter
+  start_time = time.time()
   #Test routes on quantum chip
   bqm = dnx.traveling_salesperson(routes,sampler,i)
-
+  print('Sampler took ', time.time() - start_time, ' to run with lagrange = ', str(i))
   #Verify path is valid (all locations visited once) and result is in the list of routes
   if (set(bqm) == set(routes)):
     print('Best route: ' +str(bqm))
