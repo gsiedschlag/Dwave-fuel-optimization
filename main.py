@@ -7,7 +7,7 @@
 
 from dwave.system import LeapHybridSampler
 import pandas as pd
-from parambulator import variable_deltas
+from parambulator import propellant_calc
 import networkx as nx
 import dwave_networkx as dnx
 
