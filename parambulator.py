@@ -5,7 +5,7 @@ Created on Mon Jun 15 08:31:49 2020
 @author: gsied
 """
 
-def variable_deltas(r0x,r0y,r0z,v0x,v0y,v0z,Mp,Mo,Isp,variable):
+def propellant_calc(r0x,r0y,r0z,v0x,v0y,v0z,Mo,Isp):
     """
     Parameters
     ----------
