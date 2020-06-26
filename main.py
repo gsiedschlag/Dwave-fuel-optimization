@@ -20,8 +20,8 @@ Isp = 1660 # Specific impulse of engine in s
 params = pd.read_csv(Data_name, header=None)
 params.columns = ['r0x','r0y','r0z','v0x','v0y','v0z']
 
-#Calculate delta V's, fuel requirements, and delta t's to move from one orbit to another
-deltas = variable_deltas(params['r0x'],params['r0y'],params['r0z'],\
+#Calculate fuel requirements to move from one satellite to another
+deltas = propellant_calc(params['r0x'],params['r0y'],params['r0z'],\
                       params['v0x'],params['v0y'],params['v0z'],Mo,Isp)   
     
 #Turn matrix of Deltas into nodes and edges for reading
