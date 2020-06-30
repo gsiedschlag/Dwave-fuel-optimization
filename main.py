@@ -30,7 +30,7 @@ deltas = propellant_calc(params['r0x'],params['r0y'],params['r0z'],\
 routes = nx.DiGraph()
 for i in range(len(deltas)):
     for j in range(i+1,len(deltas)):
-        routes.add_weighted_edges_from({(i,j,deltas[i][j]), (j,i,deltas[j][i])})
+        routes.add_weighted_edges_from([(i,j,deltas[i][j]), (j,i,deltas[j][i])])
 
 #choose sampler
 sampler = LeapHybridSampler()
