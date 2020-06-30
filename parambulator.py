@@ -98,11 +98,9 @@ def propellant_calc(r0x,r0y,r0z,v0x,v0y,v0z,Mo,Isp):
                     inc = inc - math.pi # if inclincation is over 90 degrees use negative equivalent
                 add = [rp,ra,inc,e,beta0]
                 orbit_params.append(add)
-            
             #Select starting orbit
-            #initial assumtions: 1) no phasing needed
-            #2)compare apogee values to reduce plane change deltav
-            #3)do combined manuver from largest apogee to other perigee
+            #compare apogee values to reduce plane change deltav
+            #do combined manuver from largest apogee to other perigee
             if orbit_params[0][1] > orbit_params[1][1]:
                 rp = orbit_params[1][0]
                 ra = orbit_params[0][1]
@@ -111,9 +109,12 @@ def propellant_calc(r0x,r0y,r0z,v0x,v0y,v0z,Mo,Isp):
                 v2 = math.sqrt(mu*(2/rp-1/a2))
                 v1 = math.sqrt(mu*(2/ra-1/a1))
                 h = np.linalg.norm(h0[0])
-                e = orbit_params[0][3]
-                r = r0_mag[0]
-                beta = orbit_params[0][4]
+                e1 = orbit_params[0][3]
+                e2 = orbit_params[1][3]
+                r1 = r0_mag[0]
+                r2 = r0_mag[1]
+                beta1 = orbit_params[0][4]
+                beta2 = orbit_params[1][4]
             else:
                 rp = orbit_params[0][0]
                 ra = orbit_params[1][1]
@@ -122,36 +123,39 @@ def propellant_calc(r0x,r0y,r0z,v0x,v0y,v0z,Mo,Isp):
                 v1 = math.sqrt(mu*(2/ra-1/(a1)))
                 v2 = math.sqrt(mu*(2/rp-1/(a2)))
                 h = np.linalg.norm(h0[1])
-                e = orbit_params[1][3]
-                r = r0_mag[1]
-                beta = orbit_params[1][4]
-            
-            #Calculate velocity of transfer orbit starting at apogee of transfer orbit
+                e1 = orbit_params[1][3]
+                e2 = orbit_params[0][3]
+                r1 = r0_mag[1]
+                r2 = r0_mag[0]
+                beta1 = orbit_params[1][4]
+                beta2 = orbit_params[0][4]
+           
+            #Calculate velocity of transfer orbit starting at apogee
             a_t = (rp + ra)/2
             vt1 = math.sqrt(mu*(2/ra-1/a_t))
             delta_v1_in_plane = abs(v1-vt1) #km/s
             
-            # if difference in inclination is greater than 5 degrees (value chosen at random)
-            # assume a plane change is needed and include it in the calculations
-            # use orbit with larger ra to minimize the needed delta v
+            # if difference in inclination is greater than 5 degrees
+            # assume a plane change is needed and include it in the calcs.
+            # Use orbit with larger ra to minimize the needed delta v
             delta_i = abs(orbit_params[0][2]-orbit_params[1][2])
             if np.degrees(delta_i) > 5:
-                delta_v_out_of_plane = h/ra*delta_i   #necessary inclination change    
+                delta_v_out_of_plane = h/ra*delta_i   #stopping here on 6/15    
             else:
                 delta_v_out_of_plane = 0
             
-            #calculate delta v needed for combined manuver (transfer orbits and plane change)
+            #calculate delta v needed for combined manuver
             delta_v_combined = math.sqrt((delta_v1_in_plane)**2\
                                          +(delta_v_out_of_plane)**2)
             
-            #velocity at perigee of transfer orbit and required delta v to enter new orbit
+            #velocity at perigee of transfer orbit
             vt2 = vt1*ra/rp
             delta_v2 = abs(v2-vt2)
             
             #Total propellant needed for first transfer    
             delta_m1 = Mo*(1-math.exp(-delta_v_combined*1000/(9.81*Isp)))# same units as Mo
             
-            #new mass after first burn
+            #new mass after burn 1
             Mo1 = Mo - delta_m1
            
             #Propellant needed to match second orbit
@@ -160,37 +164,97 @@ def propellant_calc(r0x,r0y,r0z,v0x,v0y,v0z,Mo,Isp):
             #new mass after burn 2
             Mo2 = Mo1 - delta_m2
             
-            #Total time for travel from starting location of orbit 1 to apogee of orbit 1 +
+            #Phasing calculations after Hohmann transfer:
+            
+            #phasing after transfer from larger apogee to new perigee
+            #Total time for travel to apogee of first orbit +
             #transfer orbit time
-            tau1 = 2*math.pi*math.sqrt(a1**3/mu) #period of orbit 1
-            E1 = math.acos((a1-r)/(a1*e))
+            tau1 = 2*math.pi*math.sqrt(a1**3/mu) #period of initial orbit
+            E1 = math.acos((a1-r1)/(a1*e1)) #eccentric anomaly in radians of initial satellite
+            
+            #calculate time to or since perigee
+            tp1 = math.sqrt(a1**3/mu)*(E1 - e1*math.sin(E1))
+            
+            #if beta is greater than 90 degrees it is equivalent to being negative
+            #if beta is negative then the satellite is past apogee and has to
+            #wait until perigee and half of one period
+            if beta1 > math.pi/2:
+                time_to_a1 = tau1/2 + tp1 #in seconds
+            else:
+                time_to_a1 = tau1/2 - tp1 #in seconds
+            
+            tau_t = math.pi*math.sqrt(a_t**3/mu) #half period of transfer orbit
+            delta_t_a = time_to_a1 + tau_t
+            
+            #calculate initial eccentric anomaly of target satellite
+            E2 = math.acos((a2-r2)/(a2*e2)) #eccentric anomaly in radians of initial satellite
             
             #if beta is greater than 90 degrees it is equivalent to being negative
             #if beta is negative then the satellite is past apogee and affects
-            #eccentric anamoly, E
-            if beta > math.pi/2:
-                E1 = 2*math.pi - E1
+            #eccentric anomaly, E
+            if beta2 > math.pi/2:
+                E2 = 2*math.pi - E2
                 
-            tp1 = math.sqrt(a1**3/mu)*(E1 - e*math.sin(E1)) #time since periapse of orbit 1 in seconds
-            time_to_a1 = tau1/2 - tp1 #time needed to reach apogee of orbit 1 in seconds
-            
-            tau_t = math.pi*math.sqrt(a_t**3/mu) #half period of transfer orbit
-            delta_t = time_to_a1 + tau_t
-            
             #assuming robot enters new orbit at perigee, do required phasing
             #to meet up with second satellite
-            delta_v_phasing, phasing_TOF = phasing(a2, delta_t, E1, rp)
+            delta_v_phasing_a = phasing(a2, delta_t_a, E2, rp)
             
             #Propellant needed for phasing
-            delta_m3 = Mo2*(1-math.exp(-delta_v_phasing*1000/(9.81*Isp)))# same units as Mo
+            delta_m3a = Mo2*(1-math.exp(-delta_v_phasing_a*1000/(9.81*Isp)))# same units as Mo
             
             #populate return matrix based on desired variable choice
-            delta_total[point1][point2] = delta_m1 + delta_m2 + delta_m3
+            delta_total[point1][point2] = delta_m1 + delta_m2 + delta_m3a
             
-            #graph is undirected so populate the columns with the rows
-            delta_total[point2][point1] = delta_total[point1][point2]
-    
+            #phasing after transfer from perigee of orbit 1 to larger apogee
+            #of orbit 2
+            
+            #Total time for travel to perigee of first orbit +
+            #transfer orbit time
+            tau2 = 2*math.pi*math.sqrt(a2**3/mu) #period of initial orbit
+            
+            #calculate time to or since perigee
+            tp1 = math.sqrt(a2**3/mu)*(E2 - e2*math.sin(E1))
+            
+            #if beta is greater than 90 degrees it is equivalent to being negative
+            #if beta is negative then the satellite is past perigee and affects
+            #eccentric anomaly, E
+            if beta1 > math.pi/2:
+                time_to_p1 = tp1 - tau2/2 #in seconds
+            else:
+                time_to_p1 = tau2/2 + tp1 #in seconds
+            
+            delta_t_b = time_to_p1 + tau_t
+                        
+            #if beta is greater than 90 degrees it is equivalent to being negative
+            #if beta is negative then the satellite is past apogee and affects
+            #eccentric anomaly, E
+            if beta1 > math.pi/2:
+                E1 = 2*math.pi - E1
+            
+            #assuming robot enters new orbit at apogee, do required phasing
+            #to meet up with second satellite
+            delta_v_phasing_b = phasing(a1, delta_t_b, E1, ra)
+            
+            #Propellant needed for phasing
+            delta_m3_b = Mo2*(1-math.exp(-delta_v_phasing_b*1000/(9.81*Isp)))# same units as Mo
+            
+            #populate return matrix based on desired variable choice
+            delta_total[point2][point1] = delta_m1 + delta_m2 + delta_m3_b
+
     return delta_total
+
+def calc_cost(cost_matrix, solution):
+    cost = 0
+    # if range is full length of solution then the cost is for a cycle
+    # from a to g back to a 
+    # if range is length of solution -1 then cost is for a path
+    # from a to g end
+    for i in range(len(solution)-1):
+        a = i%len(solution)
+        b = (i+1)%len(solution)
+        cost += cost_matrix[solution[a]][solution[b]]
+
+    return cost
 
 def phasing(a,delta_t, E, r):
     '''
@@ -201,7 +265,7 @@ def phasing(a,delta_t, E, r):
     delta_t : Positive Float
         Change of time in seconds to propogate orbit
     E : Float
-        Eccentric anamoly of initial position to be moved forward in time
+        Eccentric anomaly of initial position to be moved forward in time
     r : Float
         Magnitude of position vector used to calculate the delta V needed to 
         enter phasing orbit
@@ -211,9 +275,6 @@ def phasing(a,delta_t, E, r):
     delta_v_phasing : Positive Float
         Necessary delta v in km/s for robot to phase within the orbit it is 
         currently in while taking the least amount of time
-        
-    TOF : Positive Float
-        Time in seconds needed for phasing
 
     '''
     
@@ -221,15 +282,29 @@ def phasing(a,delta_t, E, r):
 
     mu = 3.986e5 # Gm of earth in km^3/s^2
     
-    omega = math.sqrt(mu/a**3)
+    omega = math.sqrt(mu/a**3) #frequency of orbit
+    
+    #eccentric anomaly after time delta_t
     E2 = (E + omega*delta_t)%(2*math.pi)
     
-    if E2 > math.pi:
-        E2 = - E2
-    a_c = (mu*((2*math.pi-E2)/(2*math.pi*omega))**2)**(1/3) #semimajor axis of phasing orbit
-    t_phasing = (2*math.pi-E2)/omega #time of flight to achieve phasing in seconds
+    if r < a:
+        #assumes entering new orbit at perigee
+        N = 2 
+        a_c = (mu*((N*math.pi-E2)/(2*math.pi*omega))**2)**(1/3) #semimajor axis of phasing orbit
+    else:
+        #entering new orbit at apogee (out of phase of perigee solution by pi)
+        N = 3
+        a_c = (mu*((N*math.pi-E2)/(2*math.pi*omega))**2)**(1/3) #semimajor axis of phasing orbit
+    
+    #Set threshold for phasing orbit 
+    while 2*a_c-r < 6528: #cannot be below altitude of 150 km
+        N += 1
+        a_c = (mu*((N*math.pi-E2)/(2*math.pi*omega))**2)**(1/3)
+        #phasing will take N half orbits of target satellite plus true anomaly
+        #from above
+        
     
     #delta v needed to enter phasing orbit and return to original orbit
     delta_v_phasing = 2*abs(math.sqrt(mu*(2/r-1/a)) - math.sqrt(mu*(2/r-1/a_c))) #km/s
     
-    return delta_v_phasing, t_phasing
+    return delta_v_phasing
