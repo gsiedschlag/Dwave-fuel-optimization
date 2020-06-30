@@ -26,7 +26,7 @@ def get_distance_matrix(cities):
     return matrix
 
 #single run code
-cities = create_cities(12)
+cities = create_cities(int(input('Enter number of nodes to use: ')))
 
 cost_matrix = get_distance_matrix(cities)
 
