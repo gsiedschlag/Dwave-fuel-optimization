@@ -43,4 +43,9 @@ start_time = time.time()
 #Test routes on quantum chip
 bqm = dnx.traveling_salesperson(routes,sampler)
 
-print('Solution took ', round(time.time() - start_time, 3), 's for cities = ', str(len(cities)))
+#Verify path is valid (all locations visited once) and result is in the list of routes
+if (set(bqm) == set(routes)):
+  print('Solution took ', round(time.time() - start_time, 3), 's for cities = ', str(len(cities)))
+  print('Best route: ' +str(bqm))
+else:
+  print('Valid path not found')
