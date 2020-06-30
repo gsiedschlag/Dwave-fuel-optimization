@@ -25,9 +25,9 @@ deltas = propellant_calc(params['r0x'],params['r0y'],params['r0z'],\
                       params['v0x'],params['v0y'],params['v0z'],Mo,Isp)   
     
 #Turn matrix of Deltas into nodes and edges for reading
-#Graph is undirected so traveling from u to v has same weight
+#Graph is directed so traveling from u to v does not have same weight
 #as traveling from v to u                         
-routes = nx.Graph()
+routes = nx.DiGraph()
 for i in range(len(deltas)):
     for j in range(i+1,len(deltas)):
         routes.add_weighted_edges_from({(i,j,deltas[i][j]), (j,i,deltas[j][i])})
