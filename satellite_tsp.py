@@ -126,32 +126,39 @@ def traveling_satellite_qubo(G, lagrange=None, weight='weight'):
 
     # Creating the QUBO
     Q = defaultdict(float)
+  
+    #create 'mega QUBO' matrix by looping through 'mini' QUBO matrices
+    #index mini QUBO columns/rows by i/j from 1 to N (number of mini matrix)
+    for index_row in range(1,len(G)+1):
+      for index_col in range(1,len(G)+1):
+        
+        #creation of mini matracies
+        
+        # Constraint that each row has exactly one 1
+        for node in G:
+          for pos_1 in range(N):
+              Q[((node*index_row, pos_1*index_col), (node*index_row, pos_1*index_col))] -= lagrange
+              for pos_2 in range(pos_1+1, N):
+                Q[((node*index_row, pos_1*index_col), (node*index_row, pos_2*index_col))] += 2.0*lagrange
 
-    # Constraint that each row has exactly one 1
-    for node in G:
-        for pos_1 in range(N):
-            Q[((node, pos_1), (node, pos_1))] -= lagrange
-            for pos_2 in range(pos_1+1, N):
-                Q[((node, pos_1), (node, pos_2))] += 2.0*lagrange
-
-    # Constraint that each col has exactly one 1
-    for pos in range(N):
-        for node_1 in G:
-            Q[((node_1, pos), (node_1, pos))] -= lagrange
-            for node_2 in set(G)-{node_1}:
+        # Constraint that each col has exactly one 1
+        for pos in range(N):
+          for node_1 in G:
+              Q[((node_1*index_row, pos*index_col), (node_1*index_row, pos*index_col))] -= lagrange
+              for node_2 in set(G)-{node_1}:
                 # QUBO coefficient is 2*lagrange, but we are placing this value 
                 # above *and* below the diagonal, so we put half in each position.
-                Q[((node_1, pos), (node_2, pos))] += lagrange
+                Q[((node_1*index_row, pos*index_col), (node_2*index_row, pos*index_col))] += lagrange
 
-    # Objective that minimizes distance
-    for u, v in itertools.combinations(G.nodes, 2):
-        for pos in range(N):
+        # Objective that minimizes distance
+        for u, v in itertools.combinations(G.nodes, 2):
+          for pos in range(N):
             nextpos = (pos + 1) % N
 
             # going from u -> v
-            Q[((u, pos), (v, nextpos))] += G[u][v][weight]
+            Q[((u*index_row, pos*index_col), (v*index_row, nextpos*index_col))] += G[u][v][weight]
 
             # going from v -> u
-            Q[((v, pos), (u, nextpos))] += G[u][v][weight]
+            Q[((v*index_row, pos*index_col), (u*index_row, nextpos*index_col))] += G[u][v][weight]
 
     return Q
