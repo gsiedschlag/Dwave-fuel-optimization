@@ -308,3 +308,76 @@ def phasing(a,delta_t, E, r):
     delta_v_phasing = 2*abs(math.sqrt(mu*(2/r-1/a)) - math.sqrt(mu*(2/r-1/a_c))) #km/s
     
     return delta_v_phasing
+
+def orbit_params(params,Mo,Isp,order):
+    """
+    Parameters
+    ----------
+    params: DataFrame object
+        Rows are orbit parameters for given spacecraft (indexed by columns) 
+    Mo : Positive Number
+        Mass of spacecraft in kg.
+    Isp : Positive Number
+        Specific impulse of engine in s.
+
+    Returns
+    -------
+    delta_m_total : list
+        fuel used to travel between satellites
+
+    """
+    import numpy as np
+    import math
+
+    #assume all object orbit around Earth
+    mu = 3.986e5 # Gm of earth in km^3/s^2
+    r0x = params['r0x']
+    r0y = params['r0y']
+    r0z = params['r0z']
+    v0x = params['v0x']
+    v0y = params['v0y']
+    v0z = params['v0z']
+    size = (len(r0x),len(r0x))
+    delta_total = np.zeros(size)
+    
+    #create single matrices of initial conditions
+    r0 = np.column_stack((r0x,r0y,r0z))
+    v0 = np.column_stack((v0x,v0y,v0z))
+    
+    #create empty vectors
+    h0 = []
+    h0_mag = []
+    r0_mag = []
+    v0_mag = []
+    h0_unit = []
+    x0 = []
+    beta0 = []
+    e = []
+    rp = []
+    a = []
+    ra = []
+    inc = []
+    
+    #populate magnitude lists
+    for i in range(len(r0)):
+        h0.append(np.cross(r0[i],v0[i]))
+        h0_mag.append(np.linalg.norm(h0[i]))
+        v0_mag.append(np.linalg.norm(v0[i]))
+        r0_mag.append(np.linalg.norm(r0[i]))
+        
+    #calculate remaining orbit parameters
+    for i in range(len(r0)):
+        h0_unit = np.column_stack((h0_unit,h0[i]/np.linalg.norm(h0[i])))
+        x0 = r0_mag[i]*(v0_mag[i])**2/mu #dimensionless orbit variable
+        beta0 = np.arccos(np.linalg.norm(h0[i])/(r0_mag[i]*v0_mag[i]))
+        e = math.sqrt((x0[i]-1)**2*(math.cos(beta0[i]))**2\
+                       + (math.sin(beta0[i]))**2) #orbit eccentricity
+        rp = np.linalg.norm(h0[i])**2/mu/(1+e[i]) #periapse distance
+        a = rp[i]/(1-e[i]) #semimajor axis distance
+        ra = a[i]*(1+e[i]) #apoapse distance
+        inc = math.acos(h0_unit[-1][i]) #orbit inclination
+        if inc > math.pi/2:
+            inc = inc - math.pi # if inclincation is over 90 degrees use negative equivalent
+            
+    parameters = np.column_stack((r0_mag,h0_mag,e,a,beta0,rp,ra))
+    return parameters
