@@ -59,6 +59,6 @@ bqm = dnx.traveling_salesperson(routes,sampler)
 if (set(bqm) == set(routes)):
   print('Solution took ', round(time.time() - start_time, 3), 's for cities = ', str(len(cities)))
   print('Best route: ' +str(bqm))
-  print("Cost:", calculate_cost(cost_matrix,bqm)
+  print("Cost:", calculate_cost(cost_matrix,bqm))
 else:
   print('Valid path not found')
