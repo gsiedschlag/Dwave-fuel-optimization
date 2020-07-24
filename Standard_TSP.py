@@ -26,6 +26,10 @@ def get_distance_matrix(cities):
             matrix[j][i] = matrix[i][j]
     return matrix
 
+def calculate_cost(cost_matrix, solution):
+    # I skiped one pair (first, last), since we don't care about returning to the starting point
+    return sum([cost_matrix[a][b] for a, b  in zip(solution[:-1], solution[1:])])
+
 #single run code
 #cities = create_cities(int(input('Enter number of nodes to use: ')))
 
@@ -55,5 +59,6 @@ bqm = dnx.traveling_salesperson(routes,sampler)
 if (set(bqm) == set(routes)):
   print('Solution took ', round(time.time() - start_time, 3), 's for cities = ', str(len(cities)))
   print('Best route: ' +str(bqm))
+  print("Cost:", calculate_cost(cost_matrix,bqm)
 else:
   print('Valid path not found')
