@@ -22,7 +22,7 @@ def get_distance_matrix(cities):
     matrix = np.zeros((number_of_cities, number_of_cities))
     for i in range(number_of_cities):
         for j in range(i, number_of_cities):
-            matrix[i][j] = distance_between_points(cities[i], cities[j])
+            matrix[i][j] = distance_between_points(cities.loc[i,:], cities.loc[j,:])
             matrix[j][i] = matrix[i][j]
     return matrix
 
