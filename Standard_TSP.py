@@ -3,6 +3,7 @@ import time
 from dwave.system import LeapHybridSampler
 import networkx as nx
 import dwave_networkx as dnx
+import pandas as pd
 
 def create_cities(N):
     """
