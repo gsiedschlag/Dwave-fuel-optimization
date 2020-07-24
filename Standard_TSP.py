@@ -33,7 +33,8 @@ Data_name = "20_TSP_city_locations.txt" #text file with all city locations
 
 params = pd.read_csv(Data_name, header=None)
 params.columns = ['x','y']
-cities = params[:int(input('Number of nodes to use: '))][:]
+nodes = int(input('Enter number of nodes to use: '))
+cities = params[:nodes][:]
 
 cost_matrix = get_distance_matrix(cities)
 
